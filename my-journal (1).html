@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>my journal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --ink: #1c1a17; --ink-soft: #4a4540; --ink-faint: #9a9088;
+    --paper: #f8f4ed; --paper-warm: #f2ece0; --paper-rule: #e8e0d0;
+    --paper-dark: #ede6d8; --accent: #7a5c3a; --accent-light: #c4a47a;
+    --sage: #5a7a5e; --sage-light: #a8c4ac; --danger: #b54040; --danger-bg: #fdf0f0;
+  }
+  html, body { min-height: 100vh; background: var(--paper); color: var(--ink); font-family: 'Lora', Georgia, serif; }
+
+  /* ── APP ── */
+  #app { min-height: 100vh; }
+  .app-layout { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+
+  /* ── SIDEBAR ── */
+  .sidebar { background: var(--paper-warm); border-right: 1px solid var(--paper-rule); padding: 1.5rem 0; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+  .sidebar-brand { padding: 0 1.25rem 1.25rem; border-bottom: 1px solid var(--paper-rule); margin-bottom: 0.75rem; }
+  .brand-name { font-size: 1rem; font-weight: 500; color: var(--ink); }
+  .brand-date { font-size: 0.68rem; color: var(--ink-faint); font-family: 'DM Mono', monospace; font-weight: 300; margin-top: 2px; }
+  .sidebar-section { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-faint); font-family: 'DM Mono', monospace; padding: 0 1.25rem; margin-bottom: 0.35rem; margin-top: 0.5rem; }
+  .mode-item { display: flex; align-items: center; gap: 8px; padding: 0.5rem 1.25rem; cursor: pointer; transition: background 0.15s; border-left: 2px solid transparent; }
+  .mode-item:hover { background: rgba(122,92,58,0.06); }
+  .mode-item.active { background: rgba(122,92,58,0.1); border-left-color: var(--accent); }
+  .mode-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .mode-label { font-size: 0.8rem; color: var(--ink-soft); line-height: 1.3; }
+  .mode-item.active .mode-label { color: var(--ink); font-weight: 500; }
+  .sidebar-bottom { margin-top: auto; padding: 1rem 1.25rem 0; border-top: 1px solid var(--paper-rule); }
+  .settings-link { font-size: 0.7rem; color: var(--ink-faint); font-family: 'DM Mono', monospace; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; display: block; margin-bottom: 0.4rem; transition: color 0.15s; }
+  .settings-link:hover { color: var(--ink-soft); }
+
+  /* ── MAIN ── */
+  .main { display: flex; flex-direction: column; max-width: 660px; margin: 0 auto; padding: 2rem 2rem 1.5rem; width: 100%; min-height: 100vh; }
+  .mode-title { font-size: 1.25rem; font-weight: 400; color: var(--ink); margin-bottom: 0.2rem; }
+  .mode-desc { font-size: 0.78rem; color: var(--ink-faint); font-family: 'DM Mono', monospace; font-weight: 300; margin-bottom: 1.5rem; line-height: 1.6; }
+
+  /* ── INPUT ── */
+  .journal-box { background: white; border: 1px solid var(--paper-rule); border-radius: 8px; padding: 1.1rem; margin-bottom: 0.85rem; background-image: repeating-linear-gradient(to bottom, transparent, transparent 27px, var(--paper-rule) 27px, var(--paper-rule) 28px); background-position: 0 34px; }
+  .journal-textarea { width: 100%; min-height: 160px; background: transparent; border: none; outline: none; font-family: 'Lora', serif; font-size: 0.92rem; line-height: 28px; color: var(--ink); resize: none; padding: 6px 0 0; }
+  .journal-textarea::placeholder { color: var(--ink-faint); font-style: italic; }
+  .entry-controls { display: flex; align-items: center; gap: 0.65rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .send-btn { padding: 0.55rem 1.1rem; background: var(--accent); color: white; border: none; border-radius: 5px; font-family: 'Lora', serif; font-size: 0.85rem; cursor: pointer; transition: background 0.2s; }
+  .send-btn:hover { background: var(--ink); }
+  .send-btn:disabled { background: var(--accent-light); cursor: not-allowed; }
+  .clear-btn { padding: 0.55rem 0.9rem; background: none; color: var(--ink-faint); border: 1px solid var(--paper-rule); border-radius: 5px; font-family: 'DM Mono', monospace; font-size: 0.72rem; cursor: pointer; transition: all 0.2s; }
+  .clear-btn:hover { border-color: var(--accent-light); color: var(--ink-soft); }
+  .char-count { font-size: 0.7rem; color: var(--ink-faint); font-family: 'DM Mono', monospace; margin-left: auto; }
+
+  /* ── CRISIS ── */
+  .crisis-banner { background: var(--danger-bg); border: 1px solid #f0c0c0; border-radius: 6px; padding: 0.7rem 1rem; margin-bottom: 1rem; font-size: 0.78rem; color: var(--danger); font-family: 'DM Mono', monospace; font-weight: 300; line-height: 1.7; display: none; }
+  .crisis-banner.show { display: block; }
+  .crisis-banner strong { font-weight: 500; display: block; margin-bottom: 2px; }
+
+  /* ── CONVERSATION ── */
+  .conversation { display: flex; flex-direction: column; gap: 1.25rem; }
+  .entry-block { display: grid; gap: 0.75rem; }
+  .you-label, .therapist-label { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.12em; font-family: 'DM Mono', monospace; margin-bottom: 0.25rem; color: var(--ink-faint); }
+  .you-bubble { background: var(--paper-warm); border: 1px solid var(--paper-rule); border-radius: 8px 8px 2px 8px; padding: 0.9rem 1rem; font-size: 0.9rem; line-height: 1.75; color: var(--ink); white-space: pre-wrap; }
+  .therapist-bubble { background: white; border: 1px solid var(--paper-rule); border-left: 3px solid var(--accent-light); border-radius: 2px 8px 8px 8px; padding: 0.9rem 1rem; font-size: 0.9rem; line-height: 1.8; color: var(--ink-soft); font-style: italic; }
+  .entry-meta { font-size: 0.66rem; color: var(--ink-faint); font-family: 'DM Mono', monospace; margin-top: 0.1rem; }
+  .empty-state { text-align: center; padding: 2.5rem 1rem; color: var(--ink-faint); }
+  .empty-glyph { font-size: 1.6rem; margin-bottom: 0.6rem; opacity: 0.5; }
+  .empty-text { font-size: 0.86rem; line-height: 1.8; font-style: italic; }
+  .prompts { display: flex; flex-direction: column; gap: 0.45rem; margin-top: 1.25rem; max-width: 360px; margin-inline: auto; text-align: left; }
+  .prompt-chip { padding: 0.55rem 0.85rem; background: white; border: 1px solid var(--paper-rule); border-radius: 5px; font-size: 0.78rem; color: var(--ink-soft); cursor: pointer; font-family: 'Lora', serif; font-style: italic; text-align: left; transition: all 0.15s; line-height: 1.5; }
+  .prompt-chip:hover { background: var(--paper-warm); border-color: var(--accent-light); color: var(--ink); }
+
+  /* ── MOBILE ── */
+  @media (max-width: 600px) {
+    .app-layout { grid-template-columns: 1fr; }
+    .sidebar { position: fixed; left: -240px; top: 0; bottom: 0; width: 240px; z-index: 100; transition: left 0.25s ease; height: 100vh; }
+    .sidebar.open { left: 0; box-shadow: 4px 0 20px rgba(0,0,0,0.12); }
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 99; }
+    .overlay.show { display: block; }
+    .mobile-bar { display: flex; align-items: center; gap: 10px; padding: 0.85rem 1rem; background: var(--paper-warm); border-bottom: 1px solid var(--paper-rule); position: sticky; top: 0; z-index: 50; }
+    .hamburger { background: none; border: none; cursor: pointer; font-size: 1.1rem; color: var(--ink-soft); padding: 4px; }
+    .mobile-title { font-size: 0.88rem; color: var(--ink); }
+    .main { padding: 1.25rem 1rem 1rem; }
+  }
+  @media (min-width: 601px) { .mobile-bar { display: none; } .overlay { display: none !important; } }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div class="mobile-bar">
+    <button class="hamburger" onclick="toggleSidebar()">☰</button>
+    <span class="mobile-title" id="mobile-title">my journal</span>
+  </div>
+  <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+  <div class="app-layout">
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-name">my journal</div>
+        <div class="brand-date" id="today-date"></div>
+      </div>
+      <div class="sidebar-section">approach</div>
+      <div id="mode-list"></div>
+      <div class="sidebar-bottom">
+        <span class="settings-link" onclick="exportJournal()">↓ export journal (.txt)</span>
+        <span class="settings-link" style="color:#b54040;" onclick="confirmClear()">✕ clear all entries</span>
+      </div>
+    </nav>
+
+    <main class="main" id="main-content">
+      <div class="mode-title" id="mode-title"></div>
+      <div class="mode-desc" id="mode-desc"></div>
+
+      <div class="crisis-banner" id="crisis-banner">
+        <strong>A gentle pause —</strong>
+        What you've written sounds serious. You deserve real support.<br>
+        <strong>988</strong> (US — call or text) &nbsp;·&nbsp; <strong>Crisis Text Line:</strong> text HOME to 741741 &nbsp;·&nbsp; <a href="https://www.befrienders.org" target="_blank" style="color:var(--danger)">befrienders.org</a> (international)
+      </div>
+
+      <div class="journal-box">
+        <textarea class="journal-textarea" id="journal-input"
+          placeholder="Write whatever's on your mind… no rules, no judgment."></textarea>
+      </div>
+
+      <div class="entry-controls">
+        <button class="send-btn" id="send-btn" onclick="sendEntry()">reflect →</button>
+        <button class="clear-btn" onclick="clearSession()">new session</button>
+        <span class="char-count" id="char-count">0</span>
+      </div>
+
+      <div class="conversation" id="conversation"></div>
+    </main>
+  </div>
+</div>
+
+<script>
+const MODES = [
+  { id:'cbt', name:'Cognitive Behavioral', short:'CBT', color:'#7a9e7e',
+    desc:'Notice thought patterns · challenge distortions · link thoughts to feelings',
+    reflections: [
+      "What specific thought is making this feel so overwhelming? If you wrote it down as a sentence, what would it say?",
+      "On a scale of 0–100, how strongly do you believe that thought right now? What evidence supports it — and what doesn't?",
+      "What would you say to a close friend who told you they were thinking this exact thought?",
+      "Is there a thinking pattern here — like all-or-nothing thinking, mind reading, or catastrophizing? What might a more balanced version of this thought sound like?",
+      "What's the worst that could realistically happen? And if it did, how might you cope? What's a more likely outcome?",
+      "When you look at the facts of the situation — not the feelings, just the facts — what do you actually know to be true?",
+      "What behavior has this thought been driving? Is that behavior helping you or hurting you?",
+      "If this thought were 30% less intense, what would you do differently today?",
+      "What assumptions are you making that you haven't questioned yet?",
+      "What would your wisest, calmest self say about this situation?"
+    ]
+  },
+  { id:'humanistic', name:'Person-Centered', short:'Person-Centered', color:'#c0754b',
+    desc:'Unconditional acceptance · reflect feelings · trust your inner knowing',
+    reflections: [
+      "It sounds like you're carrying something heavy. What feeling is most present for you right now, underneath all of this?",
+      "You wrote about this — that matters. What did it feel like to put these words down?",
+      "Is there a part of you that already knows what you need, even if it's hard to reach?",
+      "You don't have to have this figured out. What does it feel like to just sit with this, as it is?",
+      "What would feel like being truly heard right now — what do you most want someone to understand?",
+      "There's no right way to feel about this. What's the truest thing you can say about how you feel?",
+      "What's one small thing that would make you feel more like yourself today?",
+      "You're the expert on your own experience. What does your gut tell you about this?",
+      "Is there something you've been wanting to say but haven't let yourself say yet?",
+      "What do you most need right now — not what you think you should need, but what you actually need?"
+    ]
+  },
+  { id:'act', name:'Acceptance & Commitment', short:'ACT', color:'#4a7c8a',
+    desc:'Hold thoughts lightly · accept what is · act toward your values',
+    reflections: [
+      "Notice that thought for a moment — instead of arguing with it, can you just name it? 'I'm having the thought that…' How does that slight distance feel?",
+      "If this difficult feeling were a weather pattern, what would it look like? And what does it mean that weather always passes?",
+      "What do you value most in this area of your life? And is what you're doing right now moving you toward or away from that?",
+      "What are you struggling to accept right now? What would it mean to let it be there, without fighting it?",
+      "Imagine you could hold this thought like a leaf floating on a stream — watching it, not being it. What do you notice?",
+      "Your mind is telling you a story. That's what minds do. What story is it telling, and is that story useful right now?",
+      "If you weren't busy fighting this feeling, what would you have energy to do instead?",
+      "What would 'willing' — not wanting, just willing — to have this experience look like for the next hour?",
+      "What does the person you want to be do in situations like this, regardless of how they feel?",
+      "What's one small, values-aligned action you could take today, even with this discomfort present?"
+    ]
+  },
+  { id:'dbt', name:'Dialectical Behavior', short:'DBT', color:'#7a4a8a',
+    desc:'Validate fully · build distress tolerance · regulate emotions',
+    reflections: [
+      "What you're feeling makes complete sense given what you've been through. What emotion is loudest right now?",
+      "Both things can be true: this is really hard, AND you have gotten through hard things before. What has helped you in the past?",
+      "When this emotion is at its peak, what does your body feel like? Where do you feel it?",
+      "What's one thing you could do in the next ten minutes that would take the intensity down even slightly — not fix it, just turn the volume down a little?",
+      "Is there something you're about to do that feels urgent but might not be wise right now? What would 'opposite action' look like here?",
+      "You're not your emotion. What would you tell yourself if you could see this from the outside?",
+      "What's the most compassionate thing you could say to yourself right now — not to fix it, just to acknowledge it?",
+      "Radical acceptance doesn't mean you like this. It means you stop fighting reality. What would it feel like to accept, just for this moment, that this is where you are?",
+      "What are three things around you that you can see, hear, or touch right now?",
+      "What do you need to feel safe right now — physically, emotionally, relationally?"
+    ]
+  },
+  { id:'psychodynamic', name:'Psychodynamic', short:'Psychodynamic', color:'#8b6f4e',
+    desc:'Explore the past · notice patterns · understand the unconscious',
+    reflections: [
+      "Does this feeling remind you of anything from earlier in your life? What's the earliest time you can remember feeling something similar?",
+      "Is there a pattern here — do you find yourself in this kind of situation more than once? What draws you back to it?",
+      "What do you think you might be protecting yourself from by feeling this way, rather than something else?",
+      "When you imagine the other person in this situation, what do they remind you of? Anyone from before?",
+      "What part of yourself feels most unseen in this story? What does that part want?",
+      "If your feelings in this situation could speak to an earlier version of you, what would they say?",
+      "Is there a way you might be re-enacting something familiar, even if it doesn't serve you now?",
+      "What are you most afraid to admit to yourself about this?",
+      "What would you have needed back then that you didn't get? How might that be showing up now?",
+      "If you had to name the underlying feeling beneath the surface one — what would it be?"
+    ]
+  },
+  { id:'somatic', name:'Somatic / Body-Based', short:'Somatic', color:'#8a6a4a',
+    desc:'Body awareness · breath · where feelings live physically',
+    reflections: [
+      "Take a slow breath. Where in your body do you feel this most right now — your chest, your throat, your gut? What does it feel like physically?",
+      "If this feeling had a texture, weight, or temperature, what would it be? Can you stay with that sensation for a moment without trying to change it?",
+      "Notice your posture as you sit with this. What is your body doing? What might it be trying to protect?",
+      "What does your body want to do right now — curl up, move, cry, rest, stretch? Can you give it even a little of that?",
+      "Imagine breathing gently into the place in your body that feels tightest. What happens?",
+      "When did you last feel at ease in your body? What was happening?",
+      "What is your body telling you that your mind might be overriding?",
+      "If you could place one hand on the part of your body that holds this feeling, what would it need to hear?",
+      "What does 'safe' feel like in your body? Can you find even a small pocket of that right now?",
+      "Slow down just a little. What do you notice when you're not rushing past what your body is carrying?"
+    ]
+  },
+  { id:'sfbt', name:'Solution-Focused', short:'SFBT', color:'#4a8a7a',
+    desc:'Strengths · exceptions · preferred future',
+    reflections: [
+      "When was a time — even briefly — when this problem was a little less present? What was different then?",
+      "On a scale of 1–10, where are you with this right now? What would a half-point improvement look like?",
+      "What strengths or resources have helped you through hard things before? Which of those could apply here?",
+      "Imagine waking up tomorrow and something had shifted — the problem wasn't gone, but it was more manageable. What would be the first small sign you'd notice?",
+      "What's already working, even a little, in this situation?",
+      "Who in your life handles this kind of thing well? What would they do?",
+      "What do you already know you need to do — even if it feels difficult?",
+      "What would 'good enough' look like here — not perfect, just good enough?",
+      "What's one thing, however small, you could do in the next 24 hours that would move you slightly forward?",
+      "You've solved problems before. What did you do then that you could try now?"
+    ]
+  },
+  { id:'existential', name:'Existential', short:'Existential', color:'#4a4a7a',
+    desc:'Meaning · freedom · responsibility · living authentically',
+    reflections: [
+      "What does this situation ask of you — not just practically, but as a person? What is it calling you to become?",
+      "Is there something here that feels meaningless? And if so, what would meaning look like, even in small form?",
+      "You have more freedom in this than you might feel right now. What choice, however small, is still available to you?",
+      "What are you most afraid of — and what does that fear reveal about what you value most?",
+      "Are you living in a way that feels true to who you are? Where does this situation rub against that?",
+      "What kind of person do you want to be on the other side of this?",
+      "If this difficulty were pointing toward something important — a question, a change, a truth — what might it be?",
+      "What would it mean to take full responsibility for your response to this, even though you didn't choose the situation?",
+      "Is there something you've been avoiding that this moment is making harder to avoid?",
+      "How do you want to remember having shown up in this moment?"
+    ]
+  },
+];
+
+const CRISIS_WORDS = ['suicide','kill myself','want to die','end my life','self harm','hurt myself','cutting','overdose','not worth living','better off dead',"can't go on",'end it all'];
+
+let currentMode = MODES[0];
+let sessions = {};
+
+try { sessions = JSON.parse(localStorage.getItem('journal_sessions') || '{}'); } catch(e) { sessions = {}; }
+MODES.forEach(m => { if (!sessions[m.id]) sessions[m.id] = []; });
+
+function saveData() { try { localStorage.setItem('journal_sessions', JSON.stringify(sessions)); } catch(e){} }
+
+// ── REFLECTION ENGINE ──
+// Picks a reflection that hasn't been used recently, avoiding repetition
+function getReflection(modeId, entryIndex) {
+  const mode = MODES.find(m => m.id === modeId);
+  if (!mode) return "What are you noticing as you read back what you wrote?";
+  const refs = mode.reflections;
+  // Rotate through them deterministically based on entry index
+  return refs[entryIndex % refs.length];
+}
+
+// ── INIT ──
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('today-date').textContent =
+    new Date().toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'});
+  buildModeList();
+  selectMode(MODES[0]);
+
+  const ta = document.getElementById('journal-input');
+  ta.addEventListener('input', () => {
+    document.getElementById('char-count').textContent = ta.value.length;
+    ta.style.height = 'auto';
+    ta.style.height = Math.max(160, ta.scrollHeight) + 'px';
+  });
+  ta.addEventListener('keydown', e => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') sendEntry();
+  });
+});
+
+// ── MODES ──
+function buildModeList() {
+  const list = document.getElementById('mode-list');
+  list.innerHTML = '';
+  MODES.forEach(m => {
+    const el = document.createElement('div');
+    el.className = 'mode-item' + (m.id === currentMode.id ? ' active' : '');
+    el.innerHTML = `<span class="mode-dot" style="background:${m.color}"></span><span class="mode-label">${m.name}</span>`;
+    el.onclick = () => { selectMode(m); closeSidebar(); };
+    list.appendChild(el);
+  });
+}
+
+function selectMode(mode) {
+  currentMode = mode;
+  buildModeList();
+  document.getElementById('mode-title').textContent = mode.name;
+  document.getElementById('mode-desc').textContent = mode.desc;
+  document.getElementById('mobile-title').textContent = mode.name;
+  renderConversation();
+}
+
+// ── RENDER ──
+function renderConversation() {
+  const container = document.getElementById('conversation');
+  const entries = sessions[currentMode.id];
+  if (!entries || entries.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-glyph">✦</div>
+        <div class="empty-text">This is your space.<br>Write anything. There's no wrong way to begin.</div>
+        <div class="prompts">
+          <button class="prompt-chip" onclick="usePrompt(this)">"I've been feeling really overwhelmed and I don't know why…"</button>
+          <button class="prompt-chip" onclick="usePrompt(this)">"I keep thinking about something I can't let go of…"</button>
+          <button class="prompt-chip" onclick="usePrompt(this)">"Everything just feels heavy right now."</button>
+          <button class="prompt-chip" onclick="usePrompt(this)">"I want to talk about a pattern I keep repeating…"</button>
+        </div>
+      </div>`;
+    return;
+  }
+  container.innerHTML = '';
+  entries.forEach((entry, i) => {
+    const block = document.createElement('div');
+    block.className = 'entry-block';
+    block.innerHTML = `
+      <div>
+        <div class="you-label">you · ${entry.time}</div>
+        <div class="you-bubble">${escHtml(entry.user)}</div>
+      </div>
+      <div>
+        <div class="therapist-label">${currentMode.short}</div>
+        <div class="therapist-bubble">${escHtml(entry.response)}</div>
+      </div>`;
+    container.appendChild(block);
+  });
+  setTimeout(() => container.lastElementChild?.scrollIntoView({behavior:'smooth', block:'end'}), 50);
+}
+
+function usePrompt(btn) {
+  const ta = document.getElementById('journal-input');
+  ta.value = btn.textContent.replace(/^"|"$/g,'');
+  ta.focus();
+  ta.style.height = Math.max(160, ta.scrollHeight) + 'px';
+  document.getElementById('char-count').textContent = ta.value.length;
+}
+
+// ── SEND ──
+function sendEntry() {
+  const ta = document.getElementById('journal-input');
+  const text = ta.value.trim();
+  if (!text) return;
+
+  const isCrisis = CRISIS_WORDS.some(w => text.toLowerCase().includes(w));
+  document.getElementById('crisis-banner').classList.toggle('show', isCrisis);
+
+  const now = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  if (!sessions[currentMode.id]) sessions[currentMode.id] = [];
+
+  const entryIndex = sessions[currentMode.id].length;
+  const reflection = getReflection(currentMode.id, entryIndex);
+
+  sessions[currentMode.id].push({ user: text, response: reflection, time: now });
+  saveData();
+
+  ta.value = ''; ta.style.height = '160px';
+  document.getElementById('char-count').textContent = '0';
+  renderConversation();
+}
+
+// ── UTILS ──
+function clearSession() {
+  if (!confirm('Clear this session? Your entries will be removed.')) return;
+  sessions[currentMode.id] = [];
+  saveData();
+  renderConversation();
+  document.getElementById('crisis-banner').classList.remove('show');
+}
+
+function confirmClear() {
+  if (!confirm('Clear ALL journal entries across all modes? This cannot be undone.')) return;
+  MODES.forEach(m => { sessions[m.id] = []; });
+  saveData();
+  renderConversation();
+}
+
+function exportJournal() {
+  const lines = ['MY JOURNAL\n' + new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'}) + '\n\n'];
+  MODES.forEach(m => {
+    const s = sessions[m.id];
+    if (!s || s.length === 0) return;
+    lines.push(`══════ ${m.name.toUpperCase()} ══════\n\n`);
+    s.forEach(e => {
+      lines.push(`YOU (${e.time}):\n${e.user}\n\n`);
+      if (e.response) lines.push(`${m.short.toUpperCase()}:\n${e.response}\n\n`);
+      lines.push('──────\n\n');
+    });
+  });
+  const blob = new Blob([lines.join('')], {type:'text/plain'});
+  const a = Object.assign(document.createElement('a'), {href: URL.createObjectURL(blob), download:'my-journal.txt'});
+  a.click(); URL.revokeObjectURL(a.href);
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+</script>
+</body>
+</html>
